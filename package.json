@@ -17,9 +17,17 @@
     "inspector": "npx @modelcontextprotocol/inspector build/index.js"
   },
   "dependencies": {
-    "@fireproof/cloud": "^0.19.118",
-    "@modelcontextprotocol/sdk": "0.6.0",
-    "use-fireproof": "^0.19.118"
+    "@adviser/cement": "^0.2.41",
+    "@fireproof/cloud": "0.19.118-jim",
+    "@fireproof/core": "0.19.118-jim",
+    "@ipld/unixfs": "^3.0.0",
+    "@modelcontextprotocol/sdk": "0.6.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@fireproof/cloud": "file:../mcp-database-server-forked-deps/connect/dist/cloud",
+      "@fireproof/core": "file:../mcp-database-server-forked-deps/fireproof/dist/fireproof-core"
+    }
   },
   "devDependencies": {
     "@types/node": "^20.11.24",

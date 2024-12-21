@@ -10,16 +10,22 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { fireproof } from "use-fireproof";
+import { fireproof } from "@fireproof/core";
 import { connect } from "@fireproof/cloud";
+import util from "node:util";
 
 const db = fireproof("json_docs", { public: true });
 
 await db.ready();
 
-// const connection = await connect(db, 'jchris-entropia-12345');
-// console.log(connection);
+let cxGlobal: any = null;
 
+const connection = await connect(db, "jim_elements_3").then((cx) => {
+  // console.error("Connected", cx);
+  cxGlobal = cx;
+});
+
+// console.error(connection);
 
 const server = new Server(
   {
@@ -28,7 +34,7 @@ const server = new Server(
   },
   {
     capabilities: {
-      tools: { enabled: true }
+      tools: { enabled: true },
     },
   }
 );
@@ -44,25 +50,25 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {
             doc: {
               type: "object",
-              description: "JSON document to save"
-            }
+              description: "JSON document to save",
+            },
           },
-          required: ["doc"]
-        }
+          required: ["doc"],
+        },
       },
       {
-        name: "load_json_doc", 
+        name: "load_json_doc",
         description: "Load a JSON document by ID",
         inputSchema: {
           type: "object",
           properties: {
             id: {
               type: "string",
-              description: "ID of document to load"
-            }
+              description: "ID of document to load",
+            },
           },
-          required: ["id"]
-        }
+          required: ["id"],
+        },
       },
       {
         name: "delete_json_doc",
@@ -72,27 +78,43 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {
             id: {
               type: "string",
-              description: "ID of document to delete"
-            }
+              description: "ID of document to delete",
+            },
           },
-          required: ["id"]
-        }
+          required: ["id"],
+        },
       },
       {
         name: "query_json_docs",
         description: "Query JSON documents sorted by a field",
         inputSchema: {
-          type: "object", 
+          type: "object",
           properties: {
             sort_field: {
               type: "string",
-              description: "Field to sort results by"
-            }
+              description: "Field to sort results by",
+            },
           },
-          required: ["sort_field"]
-        }
-      }
-    ]
+          required: ["sort_field"],
+        },
+      },
+      {
+        name: "dump_connection",
+        description: "Dump connection info",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
+        name: "get_dashboard_url",
+        description: "Get dashboard URL",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+    ],
   };
 });
 
@@ -106,14 +128,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       const response = await db.put({
         ...doc,
-        created: Date.now()
+        created: Date.now(),
       });
 
       return {
-        content: [{
-          type: "text",
-          text: `Saved document with ID: ${response.id}`
-        }]
+        content: [
+          {
+            type: "text",
+            text: `Saved document with ID: ${response.id}`,
+          },
+        ],
       };
     }
 
@@ -125,10 +149,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       await db.del(id);
       return {
-        content: [{
-          type: "text",
-          text: `Deleted document with ID: ${id}`
-        }]
+        content: [
+          {
+            type: "text",
+            text: `Deleted document with ID: ${id}`,
+          },
+        ],
       };
     }
 
@@ -139,12 +165,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       const doc = await db.get(id);
-      
+
       return {
-        content: [{
-          type: "text",
-          text: JSON.stringify(doc)
-        }]
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(doc),
+          },
+        ],
       };
     }
 
@@ -157,14 +185,40 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const results = await db.query(sortField, {
         includeDocs: true,
         descending: true,
-        limit: 10
+        limit: 10,
       });
 
       return {
-        content: [{
-          type: "text",
-          text: JSON.stringify(results.rows.map(row => row.doc))
-        }]
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(results.rows.map((row) => row.doc)),
+          },
+        ],
+      };
+    }
+
+    case "dump_connection": {
+      // console.error("db", db);
+      // console.error("cx", cxGlobal);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `dashboard:\n${cxGlobal.dashboardUrl}\n\ndb:\n${util.format(db)}\n\ncx:\n${util.format(cxGlobal)}`,
+          },
+        ],
+      };
+    }
+
+    case "get_dashboard_url": {
+      return {
+        content: [
+          {
+            type: "text",
+            text: cxGlobal.dashboardUrl
+          },
+        ],
       };
     }
 
