@@ -10,8 +10,8 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { fireproof } from "@fireproof/core";
-import { connect } from "@fireproof/cloud";
+import { fireproof } from "@jimpick/fireproof-core";
+import { connect } from "@jimpick/fireproof-cloud";
 import util from "node:util";
 
 const db = fireproof("json_docs", { public: true });
