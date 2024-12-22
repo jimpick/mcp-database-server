@@ -1,11 +1,11 @@
 {
-  "name": "todos",
+  "name": "@jimpick/mcp-database-server",
   "version": "0.1.0",
-  "description": "ToDo List using Fireproof",
+  "description": "Example of Fireproof usage with MCP",
   "private": true,
   "type": "module",
   "bin": {
-    "todos": "./build/index.js"
+    "mcp-database-server": "./build/index.js"
   },
   "files": [
     "build"
